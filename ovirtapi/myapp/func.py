@@ -3,7 +3,6 @@ import time
 
 import requests
 import json
-import bs4
 import uuid
 from proxmoxer import ProxmoxAPI
 from django.http import HttpResponse, HttpResponseRedirect
