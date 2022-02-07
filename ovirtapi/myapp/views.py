@@ -35,15 +35,24 @@ def logout_User(request):
     logout(request)
     return redirect('login')
 
+
 @login_required(login_url='login')
 def index(request):  # отрисовка главной страницы
     get_user_vm = VirtMashID.objects.filter(account=request.user)
     all_vm = resources_get('vm')
+    usersvm = {}
+    for vm in all_vm:
+        for user_vm in get_user_vm:
+            if vm['vmid'] == user_vm.vmid:
+                name = vm['name']
+                status = vm['status']
+                uptime = vm['uptime']
+                node = vm['node']
+                # vnclink
 
-    context = {'get_all_vm': get_user_vm}
-
-
-
+                usersvm[vm['vmid']] = name, status, uptime, node
+    print(usersvm)
+    context = {'get_all_vm': usersvm}
     return render(request, 'myapp/index.html', context)
 
 

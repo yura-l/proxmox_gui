@@ -81,7 +81,6 @@ def destroyStoppedVM():
             if vm['status'] == "stopped":
                 proxmox.delete('nodes/%s/qemu/%s?destroy-unreferenced-disks=1&purge=1' % (node['node'], vm['vmid']))
 
-destroyStoppedVM()
 
 
 
