@@ -3,13 +3,10 @@ import time
 
 import requests
 import json
-import bs4
-import uuid
 from proxmoxer import ProxmoxAPI
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import redirect, render
 
-from myapp.models import VirtMashID
 
 
 def proxmoxer_api():
@@ -25,7 +22,12 @@ def resources_get(type):
 
 
 
-proxmox = proxmoxer_api()
+# proxmox = proxmoxer_api()
+y = 104
+for x in resources_get('vm'):
+    if y == x['vmid']:
+        print(x['node'])
+
 #
 # get_user_vm = VirtMashID.objects.filter(account='user1')
 # print(get_user_vm)
