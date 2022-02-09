@@ -1,8 +1,13 @@
+
+from datetime import datetime, timedelta
+
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.shortcuts import render
 from django.urls import reverse
 from django.views.decorators.clickjacking import xframe_options_exempt
+
+from . import config
 
 from .decorations import unauthentification_user
 from .models import *
@@ -39,14 +44,16 @@ def logout_User(request):
 @login_required(login_url='login')
 def index(request):  # отрисовка главной страницы
     get_user_vm = VirtMashID.objects.filter(account=request.user)
-    all_vm = resources_get('vm')
+    all_vm = resources_get(proxmoxer_api(), 'vm')
     usersvm = {}
     for vm in all_vm:
         for user_vm in get_user_vm:
             if vm['vmid'] == user_vm.vmid:
                 name = vm['name']
                 status = vm['status']
-                uptime = vm['uptime']
+                ut = vm['uptime']
+                sec = timedelta(seconds=int(ut))
+                uptime = (datetime(1, 1, 1) + sec).strftime("%-d days, %H:%M:%S")
                 node = vm['node']
                 # vnclink
 
