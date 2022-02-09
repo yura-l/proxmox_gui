@@ -95,14 +95,14 @@ def destroyStoppedVM():
                 proxmox.delete('nodes/%s/qemu/%s?destroy-unreferenced-disks=1&purge=1' % (node['node'], vm['vmid']))
 
 
-def vmStop(node, vmid):
-    proxmox = proxmoxer_api()
+def vmStop(proxmox, node, vmid):
+
     proxmox.create('nodes/%s/qemu/%s/status/stop' % (node, vmid))
     return HttpResponse("Ok")
 
 
-def vmStart(node, vmid):
-    proxmox = proxmoxer_api()
+def vmStart(proxmox, node, vmid):
+
     proxmox.create('nodes/%s/qemu/%s/status/start' % (node, vmid))
     return HttpResponse("Ok")
 

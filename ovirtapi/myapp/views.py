@@ -1,4 +1,3 @@
-
 from datetime import datetime, timedelta
 
 from django.contrib import messages
@@ -46,14 +45,18 @@ def index(request):  # отрисовка главной страницы
     get_user_vm = VirtMashID.objects.filter(account=request.user)
     all_vm = resources_get(proxmoxer_api(), 'vm')
     usersvm = {}
+    context = {'get_all_vm': usersvm}
+
     for vm in all_vm:
         for user_vm in get_user_vm:
             if vm['vmid'] == user_vm.vmid:
                 name = vm['name']
                 status = vm['status']
                 ut = vm['uptime']
-                sec = timedelta(seconds=int(ut))
-                uptime = (datetime(1, 1, 1) + sec).strftime("%-d days, %H:%M:%S")
+                min = int((ut % 3600) / 60);
+                hour = int((ut % 86400) / 3600);
+                day = int((ut % 2592000) / 86400);
+                uptime = f'{day} дней {hour}:{min}'
                 node = vm['node']
                 # vnclink
 
@@ -64,12 +67,19 @@ def index(request):  # отрисовка главной страницы
 
         if 'stop' in login_data:
             vmid = request.POST['Numd']
-            for x in resources_get('vm'):
+            for x in all_vm:
                 if x['vmid'] == int(vmid):
-                    vmStop(x['node'], vmid)
-                    return redirect('index')
+                    vmStop(proxmoxer_api(), x['node'], vmid)
 
-    context = {'get_all_vm': usersvm}
+                    return render(request, 'myapp/index.html', context)
+        elif 'run' in login_data:
+            print(login_data)
+            vmid = request.POST['Numd']
+            for x in all_vm:
+                if x['vmid'] == int(vmid):
+                    vmStart(proxmoxer_api(), x['node'], vmid)
+
+                    return render(request, 'myapp/index.html', context)
 
     return render(request, 'myapp/index.html', context)
 
