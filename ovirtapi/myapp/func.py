@@ -43,6 +43,11 @@ def nextWMID(proxmox):
     return empty_vmid
 
 
+def check_status(proxmox, node, upid):
+    task = proxmox.get('nodes/%s/tasks/%s/status' % (node, upid))
+    return task
+
+
 def createVM(proxmox, name, vmid):
     random_node = random.choice(nodeList(proxmox))
     vmList = [('vmid', vmid),
@@ -57,17 +62,23 @@ def createVM(proxmox, name, vmid):
               ]
 
     vm = dict(vmList)
+
     x = proxmox('nodes')(random_node)('qemu').create(**vm)
-    proxmox('cluster')('ha')('resources').create(sid=vm['vmid'])
+    y = check_status(proxmox, random_node, x)
+    while y['status'] != "stopped":
+        y = check_status(proxmox, random_node, x)
+
+    y = check_status(proxmox, random_node, x)
+    if y['exitstatus'] != "OK":
+        return "ERROR"
+    else:
+        print(y)
+        stat = proxmox.get('nodes/%s/qemu/%s/status/current' % (random_node, y['id']))
+        print(stat)
+        # proxmox('cluster')('ha')('resources').create(sid=vm['vmid'])
+        return
 
 
-
-    return x
-
-def check_status(proxmox, node, upid):
-    empty_vmid = proxmox.get('nodes/nextid')
-
-    h
 # def createVM(name, vmid):
 #     proxmox = proxmoxer_api()
 #     random_node = random.choice(nodeList())

@@ -149,16 +149,17 @@ def get_createvm(request):
         if form.is_valid():
             vmid = nextWMID(proxmoxer_api())
             createVM(proxmoxer_api(), form.cleaned_data['vm_name'], vmid=vmid)
-            # newvm_to_base = VirtMashID.objects.create(vmid=vmid, account=request.user)
-            # newvm_to_base.save()
-            # destroyStoppedVM()
             newvm = form.save(commit=False)
             newvm.account = request.user
             newvm.vmid = vmid
             newvm = form.save()
-            return redirect(index)
+
+
+            return redirect(get_createvm)
         else:
             form = CreatevmForm()
+
+
 
     return render(request, 'myapp/get_createvm.html', context)
 
@@ -170,7 +171,7 @@ def get_createvm_tm(request):
         form = CreatevmForm(request.POST)
         if form.is_valid():
             vmid = nextWMID()
-            print(vmid)
+
             createVM(form.cleaned_data['name'], vmid=vmid)
 
             newvm_to_base = VirtMashID.objects.create(vmid=vmid, account=request.user)

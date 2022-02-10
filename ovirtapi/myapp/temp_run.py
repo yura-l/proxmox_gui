@@ -70,7 +70,7 @@ def createVM(proxmox, name, vmid):
     return proxmox
 
 
-print(destroyStoppedVM())
+
 
 #     # command = request.GET.get('command', 'none')
 #     # currentNode = request.GET.get('node', 'none')
