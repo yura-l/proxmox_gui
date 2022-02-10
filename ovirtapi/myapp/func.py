@@ -11,25 +11,22 @@ from django.shortcuts import redirect, render
 
 
 def proxmoxer_api():
-
     #     # if not request.user.is_authenticated():
     #     #     return redirect('/Login?next=%s' % request.path)
     #
     proxmoxIpAddress = config.PROXMOX_SERVER_IP_ADDRESS
     proxmoxUsername = config.PROXMOX_USER
-    proxmoxPassword = config.PROXMOX_PASSWORD
+
     proxmoxVerifySsl = config.PROXMOX_VERIFY_SSL
-    #
-    proxmox = ProxmoxAPI(proxmoxIpAddress, user=proxmoxUsername, password=proxmoxPassword,
-                         verify_ssl=proxmoxVerifySsl)
+    proxmoxtValue = config.TOKEN_VALUE
+    proxmoxtName = config.TOKEN_NAME
+    proxmox = ProxmoxAPI(proxmoxIpAddress, user=proxmoxUsername, token_name=proxmoxtName,
+                         token_value=proxmoxtValue, verify_ssl=proxmoxVerifySsl)
 
     return proxmox
 
     # if not request.user.is_authenticated():
     #     return redirect('/Login?next=%s' % request.path)
-
-
-
 
 
 def resources_get(proxmox, type):
@@ -47,7 +44,7 @@ def nextWMID(proxmox):
 
 
 def createVM(proxmox, name, vmid):
-    random_node = random.choice(nodeList())
+    random_node = random.choice(nodeList(proxmox))
     vmList = [('vmid', vmid),
               ('name', name),
               ('scsi0', 'lvm-shared:20'),
@@ -60,11 +57,17 @@ def createVM(proxmox, name, vmid):
               ]
 
     vm = dict(vmList)
-    text = proxmox('nodes')(random_node)('qemu').create(**vm)
+    x = proxmox('nodes')(random_node)('qemu').create(**vm)
     proxmox('cluster')('ha')('resources').create(sid=vm['vmid'])
-    return text
 
 
+
+    return x
+
+def check_status(proxmox, node, upid):
+    empty_vmid = proxmox.get('nodes/nextid')
+
+    h
 # def createVM(name, vmid):
 #     proxmox = proxmoxer_api()
 #     random_node = random.choice(nodeList())
@@ -96,13 +99,11 @@ def destroyStoppedVM():
 
 
 def vmStop(proxmox, node, vmid):
-
     proxmox.create('nodes/%s/qemu/%s/status/stop' % (node, vmid))
     return HttpResponse("Ok")
 
 
 def vmStart(proxmox, node, vmid):
-
     proxmox.create('nodes/%s/qemu/%s/status/start' % (node, vmid))
     return HttpResponse("Ok")
 

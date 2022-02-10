@@ -50,6 +50,7 @@ def index(request):  # отрисовка главной страницы
     for vm in all_vm:
         for user_vm in get_user_vm:
             if vm['vmid'] == user_vm.vmid:
+
                 name = vm['name']
                 status = vm['status']
                 ut = vm['uptime']
@@ -70,15 +71,14 @@ def index(request):  # отрисовка главной страницы
             for x in all_vm:
                 if x['vmid'] == int(vmid):
                     vmStop(proxmoxer_api(), x['node'], vmid)
-
                     return render(request, 'myapp/index.html', context)
+
         elif 'run' in login_data:
             print(login_data)
             vmid = request.POST['Numd']
             for x in all_vm:
                 if x['vmid'] == int(vmid):
                     vmStart(proxmoxer_api(), x['node'], vmid)
-
                     return render(request, 'myapp/index.html', context)
 
     return render(request, 'myapp/index.html', context)
@@ -147,13 +147,16 @@ def get_createvm(request):
     if request.method == 'POST':
         form = CreatevmForm(request.POST)
         if form.is_valid():
-            vmid = nextWMID()
-            # print(vmid)
-            createVM(form.cleaned_data['name'], vmid=vmid)
-            newvm_to_base = VirtMashID.objects.create(vmid=vmid, account=request.user)
-            newvm_to_base.save()
+            vmid = nextWMID(proxmoxer_api())
+            createVM(proxmoxer_api(), form.cleaned_data['vm_name'], vmid=vmid)
+            # newvm_to_base = VirtMashID.objects.create(vmid=vmid, account=request.user)
+            # newvm_to_base.save()
             # destroyStoppedVM()
-            return HttpResponseRedirect('/index')
+            newvm = form.save(commit=False)
+            newvm.account = request.user
+            newvm.vmid = vmid
+            newvm = form.save()
+            return redirect(index)
         else:
             form = CreatevmForm()
 

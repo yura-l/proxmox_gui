@@ -9,22 +9,24 @@ from proxmoxer import ProxmoxAPI
 from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.shortcuts import redirect, render
 
-
 #
 #
 from ovirtapi.myapp import config
 
+from proxmoxer import ProxmoxAPI
 
-def proxmoxMain():
+
+def proxmoxer_api():
     #     # if not request.user.is_authenticated():
     #     #     return redirect('/Login?next=%s' % request.path)
     #
     proxmoxIpAddress = config.PROXMOX_SERVER_IP_ADDRESS
     proxmoxUsername = config.PROXMOX_USER
-    proxmoxPassword = config.PROXMOX_PASSWORD
     proxmoxVerifySsl = config.PROXMOX_VERIFY_SSL
-    #
-    proxmox = ProxmoxAPI(proxmoxIpAddress, user=proxmoxUsername, password=proxmoxPassword, verify_ssl=proxmoxVerifySsl)
+    proxmoxtValue = config.TOKEN_VALUE
+    proxmoxtName = config.TOKEN_NAME
+    proxmox = ProxmoxAPI(proxmoxIpAddress, user=proxmoxUsername, token_name=proxmoxtName,
+                         token_value=proxmoxtValue, verify_ssl=proxmoxVerifySsl)
 
     return proxmox
 
@@ -33,7 +35,43 @@ def resources_get(proxmox, type):
     return proxmox.cluster.resources.get(type=type)
 
 
-print (resources_get(proxmoxMain(), "vm"))#
+def destroyStoppedVM():
+    proxmox = proxmoxer_api()
+    y = ()
+    for node in proxmox.get('nodes'):
+        for vm in proxmox.get('nodes/%s/qemu/' % node['node']):
+            if vm['status'] == "stopped":
+                proxmox.delete('nodes/%s/qemu/%s?destroy-unreferenced-disks=1&purge=1' % (node['node'], vm['vmid']))
+
+    return
+
+
+def nextWMID(proxmox):
+    empty_vmid = proxmox.get('cluster/nextid')
+    return empty_vmid
+
+
+def createVM(proxmox, name, vmid):
+    random_node = random.choice(nodeList(proxmox))
+    vmList = [('vmid', vmid),
+              ('name', name),
+              ('scsi0', 'lvm-shared:20'),
+              ('memory', 512),
+              ('sockets', 1),
+              ('cores', 1),
+              ('cpu', 'host'),
+              ('net0', 'virtio,bridge=vmbr1'),
+              ('cdrom', 'local:iso/debian-11.2.0-amd64-netinst.iso')
+              ]
+
+    vm = dict(vmList)
+    text = proxmox('nodes')(random_node)('qemu').create(**vm)
+    proxmox('cluster')('ha')('resources').create(sid=vm['vmid'])
+    return proxmox
+
+
+print(destroyStoppedVM())
+
 #     # command = request.GET.get('command', 'none')
 #     # currentNode = request.GET.get('node', 'none')
 #     # currentVz = request.GET.get('openvz', 'none')
