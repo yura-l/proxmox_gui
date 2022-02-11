@@ -16,7 +16,7 @@ class User_list(models.Model):
 
 
 class VirtMashID(models.Model):
-    vmid = models.IntegerField(verbose_name='vmid', unique=True )
+    vmid = models.IntegerField(verbose_name='vmid' )
     vm_cpu = models.IntegerField(verbose_name='CPU', blank=True, null=True)
     vm_mem = models.IntegerField(verbose_name='Memory', blank=True, null=True)
     vm_hdd = models.IntegerField(verbose_name='HDD', blank=True, null=True)

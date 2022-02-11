@@ -45,13 +45,15 @@ def index(request):  # отрисовка главной страницы
     get_user_vm = VirtMashID.objects.filter(account=request.user)
     all_vm = resources_get(proxmoxer_api(), 'vm')
     usersvm = {}
-    context = {'get_all_vm': usersvm}
 
     for vm in all_vm:
         for user_vm in get_user_vm:
             if vm['vmid'] == user_vm.vmid:
+                try:
+                    name = vm['name']
+                except:
+                    return redirect(index)
 
-                name = vm['name']
                 status = vm['status']
                 ut = vm['uptime']
                 min = int((ut % 3600) / 60);
@@ -63,9 +65,11 @@ def index(request):  # отрисовка главной страницы
 
                 usersvm[vm['vmid']] = name, status, uptime, node
 
+
+
+    context = {'get_all_vm': usersvm}
     if (request.POST):
         login_data = request.POST.dict()
-
         if 'stop' in login_data:
             vmid = request.POST['Numd']
             for x in all_vm:
@@ -74,13 +78,18 @@ def index(request):  # отрисовка главной страницы
                     return render(request, 'myapp/index.html', context)
 
         elif 'run' in login_data:
-            print(login_data)
             vmid = request.POST['Numd']
             for x in all_vm:
                 if x['vmid'] == int(vmid):
                     vmStart(proxmoxer_api(), x['node'], vmid)
                     return render(request, 'myapp/index.html', context)
 
+        elif 'delete' in login_data:
+            vmid = request.POST['Numd']
+            for x in all_vm:
+                if x['vmid'] == int(vmid):
+                    deleteVm(proxmoxer_api(), x['node'], vmid)
+                    return render(request, 'myapp/index.html', context)
     return render(request, 'myapp/index.html', context)
 
 
@@ -154,12 +163,9 @@ def get_createvm(request):
             newvm.vmid = vmid
             newvm = form.save()
 
-
-            return redirect(get_createvm)
+            return redirect(index)
         else:
             form = CreatevmForm()
-
-
 
     return render(request, 'myapp/get_createvm.html', context)
 

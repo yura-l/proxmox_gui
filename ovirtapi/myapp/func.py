@@ -100,6 +100,8 @@ def createVM(proxmox, name, vmid):
 #
 # create /nodes/{node}/qemu/{vmid}/clone
 
+def deleteVm(proxmox, node, vmid):
+    proxmox.delete('nodes/%s/qemu/%s?destroy-unreferenced-disks=1&purge=1' % (node, vmid))
 
 def destroyStoppedVM():
     proxmox = proxmoxer_api()

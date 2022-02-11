@@ -29,7 +29,7 @@
     <!-- Navigation-->
     {% include 'myapp/navbar.html' %}    <!-- Masthead-->
     {% block content %}
-
+ <meta http-equiv="refresh" content="3" />
 
     <div class="container">
         <br>
@@ -57,7 +57,7 @@
                 <br>
                 {%for key, value in get_all_vm.items%}
                 <div class="col-sm">
-                    <div class="card" style="width: 18rem;">
+                    <div class="card" style="width: 16rem;">
                         <div class="bg-image hover-overlay ripple" data-mdb-ripple-color="light">
                             <img src="https://dummyimage.com/200x150/797982/000000" class="card-img-top"/>
                             <a href="#!">
@@ -74,14 +74,17 @@
                                 <input class="btn btn-success" type="submit" name="run" value="Run"/>
                                 <input type="hidden" name="Numd" value="{{key}}"/>
 
+
+                                 <input class="btn btn-danger" type="submit" name="delete" value="Delete"/>
                                 {%else%}
 
                                 <input class="btn btn-danger" type="submit" name="stop" value="Stop"/>
                                 <input type="hidden" name="Numd" value="{{key}}"/>
+                                 <a href="#!" class="btn btn-info">Open console</a>
                                 {%endif%}
 
 
-                                <a href="#!" class="btn btn-info">Open console</a>
+
                             </form>
                         </div>
                     </div>
