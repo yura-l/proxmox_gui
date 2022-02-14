@@ -29,7 +29,7 @@
     <!-- Navigation-->
     {% include 'myapp/navbar.html' %}    <!-- Masthead-->
     {% block content %}
- <meta http-equiv="refresh" content="3" />
+    <meta http-equiv="refresh" content="3"/>
 
     <div class="container">
         <br>
@@ -43,7 +43,7 @@
                 <a class="btn btn-dark" href="{%url 'get_createvm' %}" role="button">Создать чистую ВМ </a>
             </div>
             <div class="col-md-4 col-sm-4 col-xs-12">
-<!--                <a class="btn btn-secondary" href="{%url 'get_createvm' %}" role="button">Создать ВМ из образа </a>-->
+                <!--                <a class="btn btn-secondary" href="{%url 'get_createvm' %}" role="button">Создать ВМ из образа </a>-->
             </div>
 
         </div>
@@ -57,7 +57,7 @@
                 <br>
                 {%for key, value in get_all_vm.items%}
                 <div class="col-sm">
-                    <div class="card" style="width: 16rem;">
+                    <div class="card" style="width: 18rem;">
                         <div class="bg-image hover-overlay ripple" data-mdb-ripple-color="light">
                             <img src="https://dummyimage.com/200x150/797982/000000" class="card-img-top"/>
                             <a href="#!">
@@ -67,22 +67,23 @@
                         <div class="card-body">
                             <h5 class="card-title">{{value.0}} </h5>
                             <p class="card-text">{{value.1}}</p>
-                            <p class="card-text">Uptime- {{value.2}}</p>
-                            <form action="" method="POST">
+                            <p class="card-text">Uptime - {{value.2}}</p>
+                            <form action="" method="POST" onsubmit="return confirm('Вы уверены?')">
                                 {% csrf_token %}
                                 {%if value.1 != "running"%}
                                 <input class="btn btn-success" type="submit" name="run" value="Run"/>
-                                <input type="hidden" name="Numd" value="{{key}}"/>
+                                <input type="hidden" name="Numd" value="{{value.4}}"/>
 
 
-                                 <input class="btn btn-danger" type="submit" name="delete" value="Delete"/>
+                                <input class="btn btn-danger" type="submit" name="delete" value="Delete"/>
                                 {%else%}
 
                                 <input class="btn btn-danger" type="submit" name="stop" value="Stop"/>
-                                <input type="hidden" name="Numd" value="{{key}}"/>
-                                 <a href="#!" class="btn btn-info">Open console</a>
-                                {%endif%}
+                                <input type="hidden" name="Numd" value="{{value.4}}"/>
 
+<!--                                <a href="{{value.4}}"  class="btn btn-info" onclick="window.open(this.href, 'mywin', 'left=20,top=20,width=700,height=500,toolbar=0,resizable=1'); return false;">console</a>-->
+                                 <input class="btn btn-info" type="submit" name="console" value="Console"/>
+                                {%endif%}
 
 
                             </form>

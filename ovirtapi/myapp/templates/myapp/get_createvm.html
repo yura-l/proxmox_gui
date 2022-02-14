@@ -9,7 +9,7 @@
                 <a class="btn btn-dark" href="{%url 'index' %}" role="button">вернуться </a>
             </div>
 
-            <form method="post">
+            <form method="post" onsubmit="return confirm('Вы уверены?')">
                 {% csrf_token %}
                 {{form.as_p}}
                 {% for f in forms%}

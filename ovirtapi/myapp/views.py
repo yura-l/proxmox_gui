@@ -42,54 +42,64 @@ def logout_User(request):
 
 @login_required(login_url='login')
 def index(request):  # отрисовка главной страницы
-    get_user_vm = VirtMashID.objects.filter(account=request.user)
-    all_vm = resources_get(proxmoxer_api(), 'vm')
+
+    # get_user_vm = VirtMashID.objects.filter(account=request.user)
+
     usersvm = {}
-
-    for vm in all_vm:
-        for user_vm in get_user_vm:
-            if vm['vmid'] == user_vm.vmid:
-                try:
-                    name = vm['name']
-                except:
-                    return redirect(index)
-
-                status = vm['status']
-                ut = vm['uptime']
-                min = int((ut % 3600) / 60);
-                hour = int((ut % 86400) / 3600);
-                day = int((ut % 2592000) / 86400);
-                uptime = f'{day} дней {hour}:{min}'
-                node = vm['node']
-                # vnclink
-
-                usersvm[vm['vmid']] = name, status, uptime, node
-
-
+    get_user_vm = ResourcesProxmox.objects.filter(account=request.user)
+    # print(get_user_vm.values_list())
+    for user_vm in get_user_vm.values_list():
+        name = user_vm[12]
+        status = user_vm[16]
+        ut = user_vm[18]
+        if str(ut) == 'None':
+            uptime= 0
+        else:
+            min = int((ut % 3600) / 60);
+            hour = int((ut % 86400) / 3600);
+            day = int((ut % 2592000) / 86400);
+            uptime = f'{day} дней {hour}:{min}'
+        node = user_vm[13]
+        uuid = user_vm[0]
+        usersvm[user_vm[27]] = name, status, uptime, node, uuid
 
     context = {'get_all_vm': usersvm}
     if (request.POST):
         login_data = request.POST.dict()
         if 'stop' in login_data:
-            vmid = request.POST['Numd']
-            for x in all_vm:
-                if x['vmid'] == int(vmid):
-                    vmStop(proxmoxer_api(), x['node'], vmid)
-                    return render(request, 'myapp/index.html', context)
+            uuid = request.POST['Numd']
+            instance = ResourcesProxmox.objects.get(uuid=uuid)
+            vmStop(proxmoxer_api(), instance.node, instance.vmid)
+            return render(request, 'myapp/index.html', context)
 
         elif 'run' in login_data:
-            vmid = request.POST['Numd']
-            for x in all_vm:
-                if x['vmid'] == int(vmid):
-                    vmStart(proxmoxer_api(), x['node'], vmid)
-                    return render(request, 'myapp/index.html', context)
+            uuid = request.POST['Numd']
+            instance = ResourcesProxmox.objects.get(uuid=uuid)
+            vmStart(proxmoxer_api(), instance.node, instance.vmid)
+            return render(request, 'myapp/index.html', context)
 
         elif 'delete' in login_data:
-            vmid = request.POST['Numd']
-            for x in all_vm:
-                if x['vmid'] == int(vmid):
-                    deleteVm(proxmoxer_api(), x['node'], vmid)
-                    return render(request, 'myapp/index.html', context)
+            uuid = request.POST['Numd']
+            instance = ResourcesProxmox.objects.get(uuid=uuid)
+            deleteVm(proxmoxer_api(), instance.node, instance.vmid)
+            instance.delete()
+            return render(request, 'myapp/index.html', context)
+
+        elif 'console' in login_data:
+            uuid = request.POST['Numd']
+            instance = ResourcesProxmox.objects.get(uuid=uuid)
+            vnclink = consoleLink(proxmoxer_api(), instance.node, instance.vmid)
+            return redirect(vnclink)
+            # class ="btn btn-info" onclick="window.open(this.href, 'mywin', 'left=20,top=20,width=700,height=500,toolbar=0,resizable=1'); return false;" > console < / a > -->
+
+    all_vm = resources_get(proxmoxer_api(), 'vm')
+    for item in all_vm:
+        blog = ResourcesProxmox.objects.get(vmid=item['vmid'])
+
+        for key, value in item.items():
+            setattr(blog, key, value)
+        blog.save()
+
     return render(request, 'myapp/index.html', context)
 
 
@@ -111,38 +121,7 @@ def profile(request):
 
     get_user_vm = VirtMashID.objects.filter(account=request.user)
     all_vm = resources_get('vm')
-    # for x in all_vm:
-    # print(x)
 
-    # for item_vm in all_vm:
-    #     if int(item_vm['vmid']) == int(x):
-    #         print(item_vm['vmid'])
-    #     print(x)
-    # print(type(get_user_vm))
-
-    result_vm = {}
-    # for item_vm in all_vm:
-    #     if item_vm['vmid'] in get_user_vm:
-    #         print(item_vm)
-
-    # nodes_list = [node['node'] for node in proxmox.get('nodes')]
-
-    # for item in get_all_vm:
-    #     print(nodes_list)
-    # all_item = User_list.objects.get()
-    # body = get_vms_login(all_item.name, all_item.password)
-
-    # manage_vm(login_data['up'], 'start', all_item.name, all_item.password)
-    #     elif "down" in login_data:
-    #         manage_vm(login_data['down'], 'stop', all_item.name, all_item.password)
-    #     elif "delete" in login_data:
-    #         deletevm(login_data['delete'], all_item.name, all_item.password)
-    #     elif "console" in login_data:
-    #         get_console_vnc(login_data['console'], all_item.name, all_item.password)
-    #         return HttpResponseRedirect(reverse('vnc'))
-    #
-    #         # context = {'all_item': all_item, 'text': text, 'body': body, }
-    #         # return render(request, 'myapp/vnc.html', context)
     context = {'text': text, 'get_all_vm': get_user_vm}
     return render(request, 'myapp/profile.html', context)
 
@@ -152,12 +131,15 @@ def get_createvm(request):
     #     body = get_vms_login(all_tem.name, all_item.password)
     form = CreatevmForm()
     context = {'form': form}
-    #
+
     if request.method == 'POST':
         form = CreatevmForm(request.POST)
         if form.is_valid():
             vmid = nextWMID(proxmoxer_api())
-            createVM(proxmoxer_api(), form.cleaned_data['vm_name'], vmid=vmid)
+
+            createVM(proxmoxer_api(), form.cleaned_data['name'], vmid, form.cleaned_data['maxmem'],
+                     form.cleaned_data['maxdisk'],
+                     form.cleaned_data['maxcpu'])
             newvm = form.save(commit=False)
             newvm.account = request.user
             newvm.vmid = vmid

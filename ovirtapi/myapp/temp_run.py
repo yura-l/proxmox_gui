@@ -46,31 +46,34 @@ def destroyStoppedVM():
     return
 
 
-def nextWMID(proxmox):
-    empty_vmid = proxmox.get('cluster/nextid')
-    return empty_vmid
-
-
-def createVM(proxmox, name, vmid):
-    random_node = random.choice(nodeList(proxmox))
-    vmList = [('vmid', vmid),
-              ('name', name),
-              ('scsi0', 'lvm-shared:20'),
-              ('memory', 512),
-              ('sockets', 1),
-              ('cores', 1),
-              ('cpu', 'host'),
-              ('net0', 'virtio,bridge=vmbr1'),
-              ('cdrom', 'local:iso/debian-11.2.0-amd64-netinst.iso')
-              ]
-
-    vm = dict(vmList)
-    text = proxmox('nodes')(random_node)('qemu').create(**vm)
-    proxmox('cluster')('ha')('resources').create(sid=vm['vmid'])
-    return proxmox
 
 
 
+# def nextWMID(proxmox):
+#     empty_vmid = proxmox.get('cluster/nextid')
+#     return empty_vmid
+#
+#
+# def createVM(proxmox, name, vmid):
+#     random_node = random.choice(nodeList(proxmox))
+#     vmList = [('vmid', vmid),
+#               ('name', name),
+#               ('scsi0', 'lvm-shared:20'),
+#               ('memory', 512),
+#               ('sockets', 1),
+#               ('cores', 1),
+#               ('cpu', 'host'),
+#               ('net0', 'virtio,bridge=vmbr1'),
+#               ('cdrom', 'local:iso/debian-11.2.0-amd64-netinst.iso')
+#               ]
+#
+#     vm = dict(vmList)
+#     text = proxmox('nodes')(random_node)('qemu').create(**vm)
+#     proxmox('cluster')('ha')('resources').create(sid=vm['vmid'])
+#     return proxmox
+#
+#
+#
 
 #     # command = request.GET.get('command', 'none')
 #     # currentNode = request.GET.get('node', 'none')

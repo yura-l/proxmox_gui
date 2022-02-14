@@ -1,6 +1,6 @@
 from django import forms
 
-from .models import VirtMashID
+from .models import VirtMashID, ResourcesProxmox
 
 TEMPLATE_CHOICES = (
     ("debian11", "Debian 11"),
@@ -23,8 +23,8 @@ TEMPLATE_CHOICES = (
 
 class CreatevmForm(forms.ModelForm):
     class Meta:
-        model = VirtMashID
-        fields = ['vm_name', 'vm_cpu', 'vm_mem', 'vm_hdd']
+        model = ResourcesProxmox
+        fields = ['name', 'maxcpu', 'maxmem', 'maxdisk']
         CPU_CHOICES = (
             ("", "Select num CPU"),
             ("1", "1"),
@@ -36,24 +36,24 @@ class CreatevmForm(forms.ModelForm):
 
         MEM_CHOICES = (
             ("", "Select mem"),
-            ("536870912", "512"),
-            ("1073741824", "1Gb"),
-            ("2147483648", "2Gb"),
-            ("4294967296", "4Gb"),
-            ("8589934592", "8Gb"),
+            ("512", "512"),
+            ("1024", "1Gb"),
+            ("2048", "2Gb"),
+            ("4096", "4Gb"),
+            ("8192", "8Gb"),
         )
 
         HDD_CHOICES = (
             ("", "Select size HDD"),
-            ("10737418240", "10Gb"),
-            ("64424509440", "60Gb"),
-            ("128849018880", "120Gb"),
+            ("10", "10Gb"),
+            ("60", "60Gb"),
+            ("120", "120Gb"),
 
         )
         widgets = {
-            'vm_name': forms.TextInput(attrs={'class': 'form-control'}),
-            'vm_cpu': forms.Select(choices=CPU_CHOICES, attrs={'class': 'form-control'}),
-            'vm_mem': forms.Select(choices=MEM_CHOICES, attrs={'class': 'form-control'}),
-            'vm_hdd': forms.Select(choices=HDD_CHOICES, attrs={'class': 'form-control'}),
+            'name': forms.TextInput(attrs={'class': 'form-control'}),
+            'maxcpu': forms.Select(choices=CPU_CHOICES, attrs={'class': 'form-control'}),
+            'maxmem': forms.Select(choices=MEM_CHOICES, attrs={'class': 'form-control'}),
+            'maxdisk': forms.Select(choices=HDD_CHOICES, attrs={'class': 'form-control'}),
 
         }
