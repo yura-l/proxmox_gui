@@ -1,11 +1,16 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
+{% load tags %}
 {% load static %}
 <head>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/>
     <meta name="description" content=""/>
     <meta name="author" content=""/>
+     {% block refresh %}
+     <meta http-equiv="refresh" content="5"/>
+    {% endblock %}
+
     <title>Landing Page</title>
     <!-- Favicon-->
     <!-- Font Awesome -->
@@ -23,90 +28,81 @@
             href="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/3.10.2/mdb.min.css"
             rel="stylesheet"
     />
+
 </head>
 <body>
 <div class="container">
     <!-- Navigation-->
+
     {% include 'myapp/navbar.html' %}    <!-- Masthead-->
     {% block content %}
-    <meta http-equiv="refresh" content="3"/>
+<div class="container">
 
-    <div class="container">
-        <br>
-        <div class="row">
+</div>
+    <div class="row mt-3">
 
-            <div class="col-md-4 col-sm-4 col-xs-12">
-                <a class="btn btn-dark" href="{{ request.get_full_path }}" role="button">Обновить </a>
-            </div>
+    <h3>Список виртуальных машин</h3>
 
-            <div class="col-md-4 col-sm-4 col-xs-12">
-                <a class="btn btn-dark" href="{%url 'get_createvm' %}" role="button">Создать чистую ВМ </a>
-            </div>
-            <div class="col-md-4 col-sm-4 col-xs-12">
-                <!--                <a class="btn btn-secondary" href="{%url 'get_createvm' %}" role="button">Создать ВМ из образа </a>-->
-            </div>
-
-        </div>
-        <br>
-
-        <div class="row">
-            <h3>ВМ</h3>
-
-
-            <div class="row">
-                <br>
-                {%for key, value in get_all_vm.items%}
-                <div class="col-sm">
-                    <div class="card" style="width: 18rem;">
-                        <div class="bg-image hover-overlay ripple" data-mdb-ripple-color="light">
-                            <img src="https://dummyimage.com/200x150/797982/000000" class="card-img-top"/>
-                            <a href="#!">
-                                <div class="mask" style="background-color: rgba(251, 251, 251, 0.15);"></div>
-                            </a>
-                        </div>
-                        <div class="card-body">
-                            <h5 class="card-title">{{value.0}} </h5>
-                            <p class="card-text">{{value.1}}</p>
-                            <p class="card-text">Uptime - {{value.2}}</p>
-                            <form action="" method="POST" onsubmit="return confirm('Вы уверены?')">
-                                {% csrf_token %}
-                                {%if value.1 != "running"%}
-                                <input class="btn btn-success" type="submit" name="run" value="Run"/>
-                                <input type="hidden" name="Numd" value="{{value.4}}"/>
-
-
-                                <input class="btn btn-danger" type="submit" name="delete" value="Delete"/>
-                                {%else%}
-
-                                <input class="btn btn-danger" type="submit" name="stop" value="Stop"/>
-                                <input type="hidden" name="Numd" value="{{value.4}}"/>
-
-<!--                                <a href="{{value.4}}"  class="btn btn-info" onclick="window.open(this.href, 'mywin', 'left=20,top=20,width=700,height=500,toolbar=0,resizable=1'); return false;">console</a>-->
-                                 <input class="btn btn-info" type="submit" name="console" value="Console"/>
-                                {%endif%}
-
-
-                            </form>
-                        </div>
+    {%for value in get_all_vm%}
+        <div class="col-sm row-cols-2 row-cols-lg-5 g-2 g-lg-3">
+            <div class="card" style="width: 18rem;">
+                <div class="bg-image hover-overlay ripple" data-mdb-ripple-color="light">
+                    <div class="text-center">
+                <img src="{{MEDIA_URL}}virtual-machine.png" class="img-fluid "/>
+                    </div>
+                <a href="{% url 'get_vm' value.uuid %}">
+                <div class="mask" style="background-color: rgba(251, 251, 251, 0.15);"></div>
+                </a>
+                </div>
+                <div class="card-body">
+                    <h5 class="card-title">{{value.name}} </h5>
+                    <p class="card-text">{{value.1}}</p>
+                    {%if value.status == "running"%}
+                    <p class="card-text">Uptime - {{value.uptime|uptime }}</p>
+                    {%endif%}
+                    <div class="d-grid gap-2 d-md-flex">
+                    <form action="" method="POST" target="_self" onsubmit="return confirm('Вы уверены?')">
+                        {% csrf_token %}
+                        {%if value.status != "running"%}
+                        <input class="btn btn-success mr-2 mb-2" type="submit" name="run" value="Run"/>
+                        <input type="hidden" name="Numd" value="{{value.uuid}}"/>
+                        <input class="btn btn-danger mr-2 mb-2" type="submit" name="delete" value="Delete"/>
+                        {%else%}
+                        <input class="btn btn-danger mr-2 mb-2" type="submit" name="stop" value="Stop"/>
+                        <input type="hidden" name="Numd" value="{{value.uuid}}"/>
+                        {%endif%}
+                    </form>
+                    <form action="" target="print_popup" method="POST"
+                          onsubmit="window.open('about:blank','print_popup','width=1000,height=800');">
+                        {%if value.status == "running"%}
+                        {% csrf_token %}
+                        <input type="hidden" name="Vumd" value="{{value.uuid}}"/>
+                        <input class="btn btn-info mr-2 mb-2" type="submit" name="console" value="Console"/>
+                        {%endif%}
+                    </form>
                     </div>
                 </div>
-                {%endfor%}
             </div>
         </div>
+    {%endfor%}
     </div>
+</div>
 
 
-    {% endblock %}
+<!--    <iframe id="encoder_iframe" height=75% width="50%" src="{{vnclink}}"></iframe>-->
 
-    <!-- Bootstrap core JS-->
-    <!--    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>-->
-    <!-- Core theme JS-->
-    <!--    <script src="{% static 'myapp/js/scripts.js'%}"></script>-->
-    <!-- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *-->
-    <!-- * *                               SB Forms JS                               * *-->
-    <!-- * * Activate your form at https://startbootstrap.com/solution/contact-forms * *-->
-    <!-- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *-->
-    <!--    <script src="https://cdn.startbootstrap.com/sb-forms-latest.js"></script>-->
+
+{% endblock %}
+
+<!-- Bootstrap core JS-->
+<!--    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>-->
+<!-- Core theme JS-->
+<!--    <script src="{% static 'myapp/js/scripts.js'%}"></script>-->
+<!-- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *-->
+<!-- * *                               SB Forms JS                               * *-->
+<!-- * * Activate your form at https://startbootstrap.com/solution/contact-forms * *-->
+<!-- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *-->
+<!--    <script src="https://cdn.startbootstrap.com/sb-forms-latest.js"></script>-->
 </div>
 
 </body>

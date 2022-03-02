@@ -59,7 +59,7 @@ class ResourcesProxmox(models.Model):
                               blank=True, null=True)
     storage = models.CharField(verbose_name='Storage', help_text="The storage identifier", max_length=255, blank=True,
                                null=True)
-    uptime = models.IntegerField(verbose_name='Uptime', help_text="Node uptime in seconds", blank=True, null=True)
+    uptime = models.PositiveIntegerField(verbose_name='Uptime', help_text="Node uptime in seconds", blank=True, null=True)
     account = models.ForeignKey(User, null=True, blank=True, on_delete=models.CASCADE)
     time_creation = models.DateTimeField(auto_now=False, auto_now_add=True)
     time_modify = models.DateTimeField(auto_now=True, auto_now_add=False)

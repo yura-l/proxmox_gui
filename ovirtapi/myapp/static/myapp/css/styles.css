@@ -685,6 +685,7 @@ progress {
 
 .col {
   flex: 1 0 0%;
+  border: 1px solid transparent;
 }
 
 .row-cols-auto > * {
@@ -4517,6 +4518,7 @@ textarea.form-control-lg {
   background-clip: border-box;
   border: 1px solid rgba(0, 0, 0, 0.125);
   border-radius: 0.25rem;
+
 }
 .card > hr {
   margin-right: 0;
@@ -4623,7 +4625,7 @@ textarea.form-control-lg {
 }
 
 .card-group > .card {
-  margin-bottom: 0.75rem;
+  margin-bottom: 2.75rem;
 }
 @media (min-width: 576px) {
   .card-group {
@@ -11379,3 +11381,5 @@ footer.footer {
   padding-top: 4rem;
   padding-bottom: 4rem;
 }
+
+.top-buffer { margin-top:20px; }

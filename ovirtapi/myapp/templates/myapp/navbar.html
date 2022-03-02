@@ -28,14 +28,19 @@
       <!-- Left links -->
       <ul class="navbar-nav me-auto mb-2 mb-lg-0">
         <li class="nav-item">
-          <a class="nav-link" href="{% url 'index'%}">Dashboard</a>
+          <a class="nav-link" href="{% url 'index'%}">Главная</a>
+        </li>
+        {% if request.user.is_authenticated == True %}
+
+        <li class="nav-item">
+          <a class="nav-link" href="{{ request.get_full_path }}">Обновить</a>
+
+
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="#">Team</a>
+          <a class="nav-link" href="{%url 'get_createvm' %}">Создать ВМ</a>
         </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#">Projects</a>
-        </li>
+        {%endif%}
       </ul>
       <!-- Left links -->
     </div>

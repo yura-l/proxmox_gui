@@ -1,3 +1,4 @@
+import os
 import random
 import time
 
@@ -46,12 +47,43 @@ def destroyStoppedVM():
     return
 
 
+def access_ticket():
+    proxmoxIpAddress = config.PROXMOX_SERVER_IP_ADDRESS
+    proxmoxUsername = config.PROXMOX_USER
+    proxmoxVerifySsl = config.PROXMOX_VERIFY_SSL
+    proxmoxtPassword = config.PROXMOX_PASSWORD
+    proxmox = ProxmoxAPI(proxmoxIpAddress, user=proxmoxUsername,
+                         password=proxmoxtPassword, verify_ssl=proxmoxVerifySsl)
+    username = 'user_console@pve'
+    password = 'user_console'
+
+    return proxmox.access.ticket.create(username=username, password=password)
 
 
 
-# def nextWMID(proxmox):
-#     empty_vmid = proxmox.get('cluster/nextid')
-#     return empty_vmid
+
+def basic_blocking_task_status(proxmox_api, task_id, node_name):
+    data = {"status": ""}
+    while (data["status"] != "stopped"):
+        data = proxmox_api.nodes(node_name).tasks(task_id).status.get()
+
+    return data
+
+
+
+
+def graf_png(type):
+    proxmox = proxmoxer_api()
+    response = proxmox.nodes('pve-225').rrd.get(ds=type, timeframe='day')
+    full_filename = os.path.join(settings.STATIC_ROOT)
+    print(full_filename)
+    with open(f'{type}.png', 'wb') as f:
+        f.write(response['image'].encode('raw_unicode_escape'))
+    return f
+
+
+graf_png('cpu')
+
 #
 #
 # def createVM(proxmox, name, vmid):
@@ -441,3 +473,16 @@ def destroyStoppedVM():
 #         return HttpResponse(text)
 #     elif command == 'vmStats':
 #         return HttpResponse("Ok")
+# < p > disk - {{vm.disk}} < / p >
+# < p > hastate - {{vm.hastate}} < / p >
+# < p > maxcpu - {{vm.maxcpu}} < / p >
+# < p > maxdisk - {{vm.maxdisk}} < / p >
+# < p > maxmem - {{vm.maxmem}} < / p >
+# < p > name - {{vm.name}} < / p >
+# < p > time_creation - {{vm.time_creation}} < / p >
+# < p > time_modify - {{vm.time_modify}} < / p >
+#
+# < p > diskread - {{vm.diskread}}
+# < p > diskwrite - {{vm.diskwrite}}
+# < p > netin - {{vm.netin}}
+# < p > netout - {{vm.netout}}
