@@ -162,7 +162,7 @@ def get_createvm(request):
 @login_required(login_url='login')
 def get_vm(request, uuid):
     vm = get_object_or_404(ResourcesProxmox, uuid=uuid)
-    print(vm)
+
     path = settings.MEDIA_ROOT
     list_node = (
         'loadavg', 'maxcpu', 'cpu', 'iowait', 'memtotal', 'memused', 'swaptotal', 'swapused', 'roottotal', 'rootused',
@@ -173,7 +173,17 @@ def get_vm(request, uuid):
         graf_png(i, vm.node, vm.vmid, uuid)
 
     img_list = os.listdir(path + '\\' + uuid)
+    cdrom = get_config(proxmoxer_api(), vm.node , vm.vmid)
 
-    context = {'vm': vm, "images": img_list}
+    if (request.POST):
+        data = request.POST.dict()
+        if 'disablecdrom' in data:
+            disablecdrom(proxmoxer_api(),vm.node, vm.vmid)
+        elif 'disablecdrom' in data:
+            enablecdrom(proxmoxer_api(),vm.node, vm.vmid)
+
+
+
+    context = {'vm': vm, "images": img_list, 'cdrom' : cdrom}
 
     return render(request, 'myapp/vm.html', context)

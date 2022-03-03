@@ -78,3 +78,13 @@ class CreatevmForm(forms.ModelForm):
             'maxdisk': forms.Select(choices=HDD_CHOICES, attrs={'class': 'form-control'}),
 
         }
+
+
+class List_ISO(forms.ModelForm):
+    storage_iso_as_list = [(k, v) for k, v in storage_item_iso(proxmoxer_api()).items()]
+    iso = forms.ChoiceField(choices=storage_iso_as_list, label='', widget=forms.Select(
+        attrs={
+            'class': 'form-control',
+            'placeholder': '',
+            'required': 'True',
+        }))

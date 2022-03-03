@@ -82,8 +82,9 @@ def graf_png(type):
     return f
 
 
-graf_png('cpu')
 
+
+print(set_config('pve-223','104'))
 #
 #
 # def createVM(proxmox, name, vmid):

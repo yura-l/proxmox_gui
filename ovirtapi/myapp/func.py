@@ -185,3 +185,20 @@ def graf_png(type, node, vmid, uuid):
     with open(f'{full_filename}\{type}.png', 'wb') as f:
         f.write(response['image'].encode('raw_unicode_escape'))
     return
+
+
+
+def get_config(proxmox, node, vmid):
+
+    config_vm =proxmox.nodes(node).qemu(vmid).config.get()
+    if config_vm['ide2'].split(',')[0] == 'none':
+        return "none"
+    else:
+        return config_vm['ide2'].split(',')[0].split('/')[1]
+
+
+def enablecdrom(proxmox, node, vmid):
+    return proxmox.nodes(node).qemu(vmid).config.put(ide2="local:iso/debian-11.2.0-amd64-netinst.iso,media=cdrom")
+
+def disablecdrom(proxmox, node, vmid):
+    return proxmox.nodes(node).qemu(vmid).config.put(ide2="none,media=cdrom")
