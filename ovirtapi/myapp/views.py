@@ -44,37 +44,31 @@ def logout_User(request):
 @login_required(login_url='login')
 def index(request):  # отрисовка главной страницы
     usersvm = {}
+    get_user_vm  = {}
     get_user_vm = ResourcesProxmox.objects.filter(account=request.user)
-    # print(get_user_vm.values_list())
-    # for user_vm in get_user_vm.values_list():
-    #     name = user_vm[12]
-    #     status = user_vm[16]
-    #     ut = user_vm[18]
-    #     if str(ut) == 'None':
-    #         uptime = 0
-    #     else:
-    #         min = int((ut % 3600) / 60);
-    #         hour = int((ut % 86400) / 3600);
-    #         day = int((ut % 2592000) / 86400);
-    #         uptime = f'{day} дней {hour}:{min}'
-    #     node = user_vm[13]
-    #     uuid = user_vm[0]
-    #     usersvm[user_vm[27]] = name, status, uptime, node, uuid
-    #     vnclink = consoleLink(proxmoxer_api(), user_vm[13], user_vm[27])
-
     context = {'get_all_vm': get_user_vm, }
     if (request.POST):
         login_data = request.POST.dict()
         if 'stop' in login_data:
             uuid = request.POST['Numd']
             instance = ResourcesProxmox.objects.get(uuid=uuid)
-            vmStop(proxmoxer_api(), instance.node, instance.vmid)
-            return render(request, 'myapp/index.html', context)
+            x = vmStop(proxmoxer_api(), instance.node, instance.vmid)
+            y = check_status(proxmoxer_api(), instance.node, x)
+            while y['status'] != "stopped":
+                y = check_status(proxmoxer_api(), instance.node, x)
+                print(y['status'])
+                print('----------')
+            y = check_status(proxmoxer_api(), instance.node, x)
+            update_local_base()
+            user_vm = ResourcesProxmox.objects.filter(account=request.user)
+            context2 = {'get_all_vm': user_vm, }
+            return render(request, 'myapp/index.html', context2)
 
         elif 'run' in login_data:
             uuid = request.POST['Numd']
             instance = ResourcesProxmox.objects.get(uuid=uuid)
             vmStart(proxmoxer_api(), instance.node, instance.vmid)
+            update_local_base()
             return render(request, 'myapp/index.html', context)
 
         elif 'delete' in login_data:
@@ -97,14 +91,7 @@ def index(request):  # отрисовка главной страницы
             return response
             # class ="btn btn-info" onclick="window.open(this.href, 'mywin', 'left=20,top=20,width=700,height=500,toolbar=0,resizable=1'); return false;" > console < / a > -->
 
-    all_vm = resources_get(proxmoxer_api(), 'vm')
-    for item in all_vm:
-        update_base = ResourcesProxmox.objects.get(vmid=item['vmid'])
-
-        for key, value in item.items():
-            setattr(update_base, key, value)
-        update_base.save()
-
+    update_local_base()
     return render(request, 'myapp/index.html', context)
 
 
@@ -173,17 +160,45 @@ def get_vm(request, uuid):
         graf_png(i, vm.node, vm.vmid, uuid)
 
     img_list = os.listdir(path + '\\' + uuid)
-    cdrom = get_config(proxmoxer_api(), vm.node , vm.vmid)
-
+    cdrom = get_config(proxmoxer_api(), vm.node, vm.vmid)
     if (request.POST):
+        form = List_ISO(request.POST)
+        if form.is_valid():
+            print(form.cleaned_data['iso'])
+            enablecdrom(proxmoxer_api(), vm.node, vm.vmid, form.cleaned_data['iso'])
         data = request.POST.dict()
         if 'disablecdrom' in data:
-            disablecdrom(proxmoxer_api(),vm.node, vm.vmid)
+            disablecdrom(proxmoxer_api(), vm.node, vm.vmid)
         elif 'disablecdrom' in data:
-            enablecdrom(proxmoxer_api(),vm.node, vm.vmid)
+            enablecdrom(proxmoxer_api(), vm.node, vm.vmid)
 
+    formISO = List_ISO()
 
-
-    context = {'vm': vm, "images": img_list, 'cdrom' : cdrom}
+    context = {'vm': vm, "images": img_list, 'cdrom': cdrom, 'formISO': formISO}
 
     return render(request, 'myapp/vm.html', context)
+
+
+@login_required(login_url='login')
+def delete_vm(request, uuid):
+    vm = get_object_or_404(ResourcesProxmox, uuid=uuid)
+    login_user = request.user.username
+    user_vm = vm.account
+    context = {'vm.name': vm.name}
+    if login_user == str(user_vm):
+        deleteVm(proxmoxer_api(), vm.node, vm.vmid)
+        vm.delete()
+        # Redirect to a success page.
+
+        return render(request, 'myapp/vm_delete.html', context)
+
+    else:
+        # Return an 'invalid login' error message.
+
+        print("error")
+        return redirect('index')
+
+
+def stop_vm(request):
+    print(request)
+    return

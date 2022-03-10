@@ -8,26 +8,28 @@
     <meta name="description" content=""/>
     <meta name="author" content=""/>
      {% block refresh %}
-     <meta http-equiv="refresh" content="5"/>
     {% endblock %}
 
     <title>Landing Page</title>
     <!-- Favicon-->
-    <!-- Font Awesome -->
+
     <link
             href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css"
             rel="stylesheet"
     />
-    <!-- Google Fonts -->
+
     <link
             href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap"
             rel="stylesheet"
     />
-    <!-- MDB -->
     <link
             href="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/3.10.2/mdb.min.css"
             rel="stylesheet"
     />
+
+
+
+
 
 </head>
 <body>
@@ -38,14 +40,22 @@
     {% block content %}
 <div class="container">
 
+            <div class="mt-3">
+            <div id = "alert-box"></div>
+            </div>
 </div>
     <div class="row mt-3">
 
     <h3>Список виртуальных машин</h3>
 
     {%for value in get_all_vm%}
+<!--        <div class="col-sm row-cols-2 row-cols-lg-5 g-2 g-lg-3">-->
         <div class="col-sm row-cols-2 row-cols-lg-5 g-2 g-lg-3">
-            <div class="card" style="width: 18rem;">
+            {%if value.status == "running"%}
+            <div class= "card border border-success shadow-0 mb-3" style="width: 18rem;">
+            {%else%}
+            <div class="card  border border-danger shadow-0 mb-3 " style="width: 18rem;">
+             {% endif%}
                 <div class="bg-image hover-overlay ripple" data-mdb-ripple-color="light">
                     <div class="text-center">
                 <img src="{{MEDIA_URL}}virtual-machine.png" class="img-fluid "/>
@@ -54,33 +64,16 @@
                 <div class="mask" style="background-color: rgba(251, 251, 251, 0.15);"></div>
                 </a>
                 </div>
-                <div class="card-body">
-                    <h5 class="card-title">{{value.name}} </h5>
+                <div class="card-body text-center">
+                    <h5 class="card-title">DNS имя - {{value.name}} </h5>
                     <p class="card-text">{{value.1}}</p>
                     {%if value.status == "running"%}
-                    <p class="card-text">Uptime - {{value.uptime|uptime }}</p>
+                    <p class="card-text text-success"">{{ value.status }} - {{value.uptime|uptime }}</p>
+                    {%else%}
+
+                    <p class="card-text text-danger"">ВМ остановлена </p>
                     {%endif%}
-                    <div class="d-grid gap-2 d-md-flex">
-                    <form action="" method="POST" target="_self" onsubmit="return confirm('Вы уверены?')">
-                        {% csrf_token %}
-                        {%if value.status != "running"%}
-                        <input class="btn btn-success mr-2 mb-2" type="submit" name="run" value="Run"/>
-                        <input type="hidden" name="Numd" value="{{value.uuid}}"/>
-                        <input class="btn btn-danger mr-2 mb-2" type="submit" name="delete" value="Delete"/>
-                        {%else%}
-                        <input class="btn btn-danger mr-2 mb-2" type="submit" name="stop" value="Stop"/>
-                        <input type="hidden" name="Numd" value="{{value.uuid}}"/>
-                        {%endif%}
-                    </form>
-                    <form action="" target="print_popup" method="POST"
-                          onsubmit="window.open('about:blank','print_popup','width=1000,height=800');">
-                        {%if value.status == "running"%}
-                        {% csrf_token %}
-                        <input type="hidden" name="Vumd" value="{{value.uuid}}"/>
-                        <input class="btn btn-info mr-2 mb-2" type="submit" name="console" value="Console"/>
-                        {%endif%}
-                    </form>
-                    </div>
+                    <a href="{% url 'get_vm' value.uuid %}" class="btn  btn-info">Подробнее</a>
                 </div>
             </div>
         </div>
@@ -107,7 +100,10 @@
 
 </body>
 </html>
+<script src="{% static 'myapp\jquery-3.6.0.min.js' %}" defer ></script>
+    <script src="{% static 'myapp\main.js' %}" defer ></script>
+
 <script
         type="text/javascript"
-        src="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/3.10.2/mdb.min.js"
-></script>
+        src="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/3.10.2/mdb.min.js">
+</script>

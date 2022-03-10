@@ -80,7 +80,7 @@ class CreatevmForm(forms.ModelForm):
         }
 
 
-class List_ISO(forms.ModelForm):
+class List_ISO(forms.Form):
     storage_iso_as_list = [(k, v) for k, v in storage_item_iso(proxmoxer_api()).items()]
     iso = forms.ChoiceField(choices=storage_iso_as_list, label='', widget=forms.Select(
         attrs={

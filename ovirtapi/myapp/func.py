@@ -139,13 +139,13 @@ def destroyStoppedVM():
 
 
 def vmStop(proxmox, node, vmid):
-    proxmox.create('nodes/%s/qemu/%s/status/stop' % (node, vmid))
-    return HttpResponse("Ok")
+    return proxmox.create('nodes/%s/qemu/%s/status/stop' % (node, vmid))
+
 
 
 def vmStart(proxmox, node, vmid):
-    proxmox.create('nodes/%s/qemu/%s/status/start' % (node, vmid))
-    return HttpResponse("Ok")
+
+    return proxmox.create('nodes/%s/qemu/%s/status/start' % (node, vmid))
 
 
 def getNodefromVmid(vmid):
@@ -197,8 +197,22 @@ def get_config(proxmox, node, vmid):
         return config_vm['ide2'].split(',')[0].split('/')[1]
 
 
-def enablecdrom(proxmox, node, vmid):
-    return proxmox.nodes(node).qemu(vmid).config.put(ide2="local:iso/debian-11.2.0-amd64-netinst.iso,media=cdrom")
+def enablecdrom(proxmox, node, vmid, iso):
+    return proxmox.nodes(node).qemu(vmid).config.put(ide2="%s,media=cdrom" % (iso))
 
 def disablecdrom(proxmox, node, vmid):
     return proxmox.nodes(node).qemu(vmid).config.put(ide2="none,media=cdrom")
+
+
+def status_vm(proxmox,node,vmid):
+    config = proxmox.nodes(node).qemu(vmid).status.current.get()
+    return
+
+def update_local_base():
+    all_vm = resources_get(proxmoxer_api(), 'vm')
+    for item in all_vm:
+        update_base = ResourcesProxmox.objects.get(vmid=item['vmid'])
+        for key, value in item.items():
+            setattr(update_base, key, value)
+        update_base.save()
+    return print("save")

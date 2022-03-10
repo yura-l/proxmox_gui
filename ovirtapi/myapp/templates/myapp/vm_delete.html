@@ -1,0 +1,11 @@
+{% extends "myapp\index.html" %}
+     {% block refresh %}
+    {% endblock %}
+
+{% block content %}
+
+<h3>
+Виртуальная машина {{vm.name}} успешно удалена
+</h3>
+ <a href="{% url 'index'%}">Вернуться </a>
+    {% endblock %}
