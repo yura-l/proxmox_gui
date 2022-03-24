@@ -1,0 +1,89 @@
+{% extends "myapp\index.html" %}
+{% block refresh %}
+{% endblock %}
+{% block content %}
+<div class="container">
+    <div class="row top-buffer">
+
+    </div>
+</div>
+<div class="container">
+    <div class="mt-5"><h4>Выберите параметры для виртуальной машины</h4></div>
+    <div class="row top-buffer mt-4">
+            <form method="post" onsubmit="return confirm('Вы уверены?')">
+                {% csrf_token %}
+
+                <div class="input-group mb-3">
+                    <div class="form-check form-check-inline">
+                        <input class="btn-check" type="radio" name="templateVmOs" value="debian9" id="debian9"/>
+                        <label class="btn btn-outline-info" id="debian9" for="debian9">Debian 9</label></div>
+
+                    <div class="form-check form-check-inline">
+                        <input class="btn-check" type="radio" name="templateVmOs" value=debian10 id="debian10"/>
+                        <label class="btn btn-outline-info" for="debian10">Debian 10</label></div>
+                    <div class="form-check form-check-inline">
+                        <input class="btn-check" type="radio" name="templateVmOs" value="ubuntu16" id="ubuntu16" />
+                        <label class="btn btn-outline-info" for="ubuntu16">Ubuntu 16.04 LTS</label></div>
+                    <div class="form-check form-check-inline">
+                        <input class="btn-check" type="radio" name="templateVmOs" value="ubuntu18" id="ubuntu18" checked/>
+                        <label class="btn btn-outline-info" for="ubuntu18">Ubuntu 18.04 LTS</label></div>
+                    <div class="form-check form-check-inline">
+                        <input class="btn-check" type="radio" name="templateVmOs" value="centos7" id="centos7"/>
+                        <label class="btn btn-outline-info" for="centos7">CentOS 7</label></div>
+
+                </div>
+                <div class="input-group2 mb-3">
+                    <div class="form-check form-check-inline">
+                        <input class="btn-check" type="radio" name="templateVmCPU" value=1 id="CPU1" checked/>
+                        <label class="btn btn-outline-info" for="CPU1">CPU 1</label></div>
+                    <div class="form-check form-check-inline">
+                        <input class="btn-check" type="radio" name="templateVmCPU" value=2 id="CPU2"/>
+                        <label class="btn btn-outline-info" for="CPU2">CPU 2</label></div>
+                    <div class="form-check form-check-inline">
+                        <input class="btn-check" type="radio" name="templateVmCPU" value=4 id="CPU4"/>
+                        <label class="btn btn-outline-info" for="CPU4">CPU 4</label></div>
+                </div>
+
+                <div class="input-group3 mb-3">
+                    <div class="form-check form-check-inline">
+                        <input class="btn-check" type="radio" name="templateVmMem" value=512 id="MEM512" checked/>
+                        <label class="btn btn-outline-info" for="MEM512">MEM 512 Mb</label></div>
+                    <div class="form-check form-check-inline">
+                        <input class="btn-check" type="radio" name="templateVmMem" value=1024 id="MEM1G"/>
+                        <label class="btn btn-outline-info" for="MEM1G">MEM 1 Gb</label></div>
+                    <div class="form-check form-check-inline">
+                        <input class="btn-check" type="radio" name="templateVmMem" value=2048 id="MEM2G"/>
+                        <label class="btn btn-outline-info" for="MEM2G">MEM 2 Gb</label></div>
+                </div>
+
+                <div class="input-group4 mb-3">
+                    <div class="form-check form-check-inline">
+                        <input class="btn-check" type="radio" name="templateVmHDD" value=5 id="HDD5" checked/>
+                        <label class="btn btn-outline-info" for="HDD5">HDD 5 Gb</label></div>
+                    <div class="form-check form-check-inline">
+                        <input class="btn-check" type="radio" name="templateVmHDD" value=10 id="HDD10"/>
+                        <label class="btn btn-outline-info" for="HDD10">HDD 10 Gb</label></div>
+                    <div class="form-check form-check-inline">
+                        <input class="btn-check" type="radio" name="templateVmHDD" value=30 id="HDD30"/>
+                        <label class="btn btn-outline-info" for="HDD30">HDD 30 Gb</label></div>
+                </div>
+
+
+                {{form.as_p}}
+                {% for f in forms%}
+                <div class="form-error"> {{f.errors}}</div>
+                {%endfor%}
+
+                <div class="input-group6 mb-3">
+                    <input class="btn  btn-success" type="submit" value="Создать ВМ">
+                </div>
+
+
+            </form>
+
+        </div>
+    </div>
+</div>
+
+
+{% endblock %}
