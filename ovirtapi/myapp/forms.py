@@ -88,3 +88,8 @@ class List_ISO(forms.Form):
             'placeholder': '',
             'required': 'True',
         }))
+
+
+class Template_form(forms.Form):
+    vm_description = forms.CharField(max_length=255, label='Описание ВМ')
+    root_pass= forms.CharField(max_length=255, label='Пароль root')

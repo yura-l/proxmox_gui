@@ -3,6 +3,7 @@ import random
 import time
 import requests
 import json
+from django.shortcuts import get_object_or_404
 
 from . import config
 
@@ -38,6 +39,7 @@ def UpdateBase(data_dict):
     m = ResourcesProxmox(**data_dict)
     # don't forget to save to database!
     m.save()
+
 
 def nodeList(proxmox):
     nodes_list = [node['node'] for node in proxmox.get('nodes')]
@@ -85,7 +87,6 @@ def createVM(proxmox, name, vmid, maxmem, maxdisk, maxcpu, cdrom):
         return
 
 
-
 def access_ticket():
     proxmoxIpAddress = config.PROXMOX_SERVER_IP_ADDRESS
     proxmoxUsername = config.PROXMOX_USER
@@ -100,9 +101,6 @@ def access_ticket():
     password = 'user_console'
 
     return proxmox.access.ticket.create(username=username, password=password)
-
-
-
 
 
 # def createVM(name, vmid):
@@ -142,9 +140,7 @@ def vmStop(proxmox, node, vmid):
     return proxmox.create('nodes/%s/qemu/%s/status/stop' % (node, vmid))
 
 
-
 def vmStart(proxmox, node, vmid):
-
     return proxmox.create('nodes/%s/qemu/%s/status/start' % (node, vmid))
 
 
@@ -158,13 +154,14 @@ def getNodefromVmid(vmid):
 
 def consoleLink(proxmox, node, vmid):
     configvnc = proxmox.create("nodes", node, "qemu", vmid, 'vncproxy?websocket=1')
-    vnclink = (f"https://aniks-proxmox.o0007.ru/?console=kvm&novnc=1&node=%s&resize=scale&vmid=%s&path=api2/json/nodes/%s/qemu/%s/vncwebsocket?port=443&vncticket={configvnc['ticket']}" %(
-    node, vmid, node, vmid))
+    vnclink = (
+                f"https://aniks-proxmox.o0007.ru/?console=kvm&novnc=1&node=%s&resize=scale&vmid=%s&path=api2/json/nodes/%s/qemu/%s/vncwebsocket?port=443&vncticket={configvnc['ticket']}" % (
+            node, vmid, node, vmid))
     return vnclink
 
 
 def storage_item_iso(proxmox):
-    stor_iso = {'':'Выбрать образ ОС'}
+    stor_iso = {'': 'Выбрать образ ОС'}
     list_iso = proxmox.nodes('pve-223').storage.local.content.get()
     for i in list_iso:
         if i['volid'].endswith('.iso'):
@@ -187,32 +184,46 @@ def graf_png(type, node, vmid, uuid):
     return
 
 
-
 def get_config(proxmox, node, vmid):
-
-    config_vm =proxmox.nodes(node).qemu(vmid).config.get()
+    config_vm = proxmox.nodes(node).qemu(vmid).config.get()
     if config_vm['ide2'].split(',')[0] == 'none':
         return "none"
-    else:
+    elif '/' in config_vm['ide2'].split(',')[0]:
+        print(config_vm['ide2'])
         return config_vm['ide2'].split(',')[0].split('/')[1]
+    else:
+        return config_vm['ide2'].split(',')[0]
 
 
 def enablecdrom(proxmox, node, vmid, iso):
     return proxmox.nodes(node).qemu(vmid).config.put(ide2="%s,media=cdrom" % (iso))
 
+
 def disablecdrom(proxmox, node, vmid):
     return proxmox.nodes(node).qemu(vmid).config.put(ide2="none,media=cdrom")
 
 
-def status_vm(proxmox,node,vmid):
+def status_vm(proxmox, node, vmid):
     config = proxmox.nodes(node).qemu(vmid).status.current.get()
     return
+
 
 def update_local_base():
     all_vm = resources_get(proxmoxer_api(), 'vm')
     for item in all_vm:
-        update_base = ResourcesProxmox.objects.get(vmid=item['vmid'])
-        for key, value in item.items():
-            setattr(update_base, key, value)
-        update_base.save()
+        bob, created = ResourcesProxmox.objects.update_or_create(vmid=item['vmid'], defaults=item)
+
     return print("save")
+
+
+def clone_vm(vmid, description, user):
+    proxmox = proxmoxer_api()
+    newid = nextWMID(proxmox)
+    name = "user-" + str(newid) + ".test.local"
+    random_node = random.choice(nodeList(proxmox))
+    x = proxmox('nodes')("pve-226")('qemu')(vmid)('clone').create(description=description, name=name, newid=newid,
+                                                                  target=random_node)
+    values_for_update = {"vmid": newid, "account": user}
+    vm_instance, created = ResourcesProxmox.objects.update_or_create(vmid=newid, defaults=values_for_update)
+
+    return x

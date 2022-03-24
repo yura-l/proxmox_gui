@@ -4,34 +4,26 @@ from django.contrib.auth import authenticate, login, logout
 from django.shortcuts import render, get_object_or_404
 from django.urls import reverse
 from django.views.decorators.clickjacking import xframe_options_exempt
-
 from . import config
-
 from .decorations import unauthentification_user
 from .models import *
 from .func import *
 from .forms import *
 from requests.structures import CaseInsensitiveDict
-import paramiko
 from django.contrib.auth.decorators import login_required
 
 
 @unauthentification_user
 def loginPage(request):
     if request.method == 'POST':
-
         username = request.POST.get('username')
         password = request.POST.get('password')
         user = authenticate(request, username=username, password=password)
-
         if user is not None:
             login(request, user)
-
             return redirect('index')
-
     context = {}
     response = render(request, 'myapp/login.html', context)
-
     return response
 
 
@@ -47,6 +39,7 @@ def index(request):  # отрисовка главной страницы
     get_user_vm  = {}
     get_user_vm = ResourcesProxmox.objects.filter(account=request.user)
     context = {'get_all_vm': get_user_vm, }
+    update_local_base()
     if (request.POST):
         login_data = request.POST.dict()
         if 'stop' in login_data:
@@ -91,7 +84,7 @@ def index(request):  # отрисовка главной страницы
             return response
             # class ="btn btn-info" onclick="window.open(this.href, 'mywin', 'left=20,top=20,width=700,height=500,toolbar=0,resizable=1'); return false;" > console < / a > -->
 
-    update_local_base()
+
     return render(request, 'myapp/index.html', context)
 
 
@@ -199,6 +192,25 @@ def delete_vm(request, uuid):
         return redirect('index')
 
 
+@login_required(login_url='login')
 def stop_vm(request):
     print(request)
     return
+
+@login_required(login_url='login')
+def get_template_vm(request):
+    template_vm_list ={"debian9":9000,"debian10":9001,"ubuntu18":9002,"ubuntu20":9003,"ubuntu16":9004,"":9005}
+    form = Template_form()
+    if request.method == 'POST':
+        templateVmOs = request.POST.get('templateVmOs')
+        templateVmCPU = request.POST.get('templateVmCPU')
+        templateVmMem = request.POST.get('templateVmMem')
+        templateVmHDD = request.POST.get('templateVmHDD')
+        vm_description = request.POST.get('vm_description')
+        root_pass = request.POST.get('root_pass')
+        clone_vm(template_vm_list[templateVmOs], vm_description, request.user )
+        return redirect('index')
+
+        # print (templateVmOs, templateVmCPU, templateVmMem , templateVmHDD)
+    context = {'form': form}
+    return render(request, 'myapp/vm_template.html', context)

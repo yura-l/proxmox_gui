@@ -9,9 +9,6 @@ from django.conf import settings
 from proxmoxer import ProxmoxAPI
 from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.shortcuts import redirect, render
-
-#
-#
 from ovirtapi.myapp import config
 
 from proxmoxer import ProxmoxAPI
@@ -41,7 +38,8 @@ def destroyStoppedVM():
     y = ()
     for node in proxmox.get('nodes'):
         for vm in proxmox.get('nodes/%s/qemu/' % node['node']):
-            if vm['status'] == "stopped":
+            if vm['status'] == "stopped" and vm['vmid'] <1000:
+
                 proxmox.delete('nodes/%s/qemu/%s?destroy-unreferenced-disks=1&purge=1' % (node['node'], vm['vmid']))
 
     return
@@ -60,16 +58,12 @@ def access_ticket():
     return proxmox.access.ticket.create(username=username, password=password)
 
 
-
-
 def basic_blocking_task_status(proxmox_api, task_id, node_name):
     data = {"status": ""}
     while (data["status"] != "stopped"):
         data = proxmox_api.nodes(node_name).tasks(task_id).status.get()
 
     return data
-
-
 
 
 def graf_png(type):
@@ -82,10 +76,35 @@ def graf_png(type):
     return f
 
 
+def nodeList(proxmox):
+    nodes_list = [node['node'] for node in proxmox.get('nodes')]
+    return nodes_list
 
 
-print(set_config('pve-223','104'))
-#
+def nextWMID(proxmox):
+    empty_vmid = proxmox.get('cluster/nextid')
+    return empty_vmid
+
+
+def check_status(proxmox, node, upid):
+    task = proxmox.get('nodes/%s/tasks/%s/status' % (node, upid))
+    return task
+
+def clone_vm(vmid,description):
+    proxmox = proxmoxer_api()
+    newid = nextWMID(proxmox)
+    name="user-"+str(newid)+".test.local"
+    random_node = random.choice(nodeList(proxmox))
+    x = proxmox('nodes')("pve-226")('qemu')(vmid)('clone').create(description=description, name=name, newid=newid,
+                                                                  target=random_node )
+    return x
+
+def config_vm(node, vmid, item, value):
+    proxmox = proxmoxer_api()
+    return proxmox('nodes')(node)('qemu')(vmid)('config').set(item=value)
+
+
+destroyStoppedVM()
 #
 # def createVM(proxmox, name, vmid):
 #     random_node = random.choice(nodeList(proxmox))
