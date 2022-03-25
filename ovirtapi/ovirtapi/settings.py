@@ -24,7 +24,7 @@ SECRET_KEY = 'lkjlkdjg;wj;g;fhgsdlfhglsdkhgklsdhdfkljshflhjslkfgwekgr'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 CORS_ALLOW_CREDENTIALS = True
-ALLOWED_HOSTS = ['x.o0007.ru', 'proxmoxgui.o0007.ru', '192.168.137.168', '127.0.0.1']
+ALLOWED_HOSTS = ['x.o0007.ru', 'proxmoxgui.o0007.ru', '192.168.137.162', '127.0.0.1']
 
 # Application definition
 

@@ -15,6 +15,8 @@ urlpatterns = [
     path('template/', views.get_template_vm, name='get_template_vm'),
     # path('vnc/', views.vnc, name='vnc'),
     path('vm/<str:uuid>/delete/', views.delete_vm, name='delete_vm'),
+    path('vm/<str:uuid>/console/', views.console_vm, name='console_vm'),
+    path('vm/<str:uuid>/start/', views.start_vm, name='start_vm'),
     path('vm/<str:uuid>/stop/', views.stop_vm, name='stop_vm'),
     # # path('console/', views.get_console, name='get_console'),
     # # path("see_request/", views.see_request),

@@ -77,6 +77,8 @@ class ResourcesProxmox(models.Model):
                             null=True)
     vm_id = models.CharField(verbose_name='vm-id', help_text="The", max_length=255, blank=True,
                              null=True)
+    description = models.CharField(verbose_name='description', help_text="Описание", max_length=255, blank=True,
+                                null=True)
 
     def __str__(self):
         return str(self.vmid)

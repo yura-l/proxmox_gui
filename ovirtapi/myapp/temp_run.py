@@ -44,7 +44,7 @@ def destroyStoppedVM():
 
     return
 
-
+destroyStoppedVM()
 def access_ticket():
     proxmoxIpAddress = config.PROXMOX_SERVER_IP_ADDRESS
     proxmoxUsername = config.PROXMOX_USER
@@ -103,9 +103,27 @@ def config_vm(node, vmid, item, value):
     proxmox = proxmoxer_api()
     return proxmox('nodes')(node)('qemu')(vmid)('config').set(item=value)
 
+def check_status(proxmox, node, upid):
+    task = proxmox.get('nodes/%s/tasks/%s/status' % (node, upid))
+    return task
 
-destroyStoppedVM()
-#
+
+def check_task(node,upid):
+    x = check_status(proxmoxer_api(), node,upid)
+    while x['exitstatus']!='OK' and x['status']!='stopped':
+        x = check_status(proxmoxer_api(), node, upid)
+
+    return print("ok")
+
+
+def ip_list_tmp()
+    proxmox = proxmoxer_api()
+    x=proxmox.get('nodes/%s/qemu/%s/agent/network-get-interfaces' % ('pve-225', '100'))
+    for i,o in x.items():
+        for k in o:
+            for u in k['ip-addresses']:
+                print(u['ip-address'])
+
 # def createVM(proxmox, name, vmid):
 #     random_node = random.choice(nodeList(proxmox))
 #     vmList = [('vmid', vmid),

@@ -15,7 +15,7 @@ from .models import ResourcesProxmox
 from django.conf import settings
 
 
-def proxmoxer_api():
+def proxmoxer_api() -> object:
     proxmoxIpAddress = config.PROXMOX_SERVER_IP_ADDRESS
     proxmoxUsername = config.PROXMOX_USER
 
@@ -144,24 +144,25 @@ def vmStart(proxmox, node, vmid):
     return proxmox.create('nodes/%s/qemu/%s/status/start' % (node, vmid))
 
 
-def getNodefromVmid(vmid):
-    proxmox = proxmoxer_api()
-    for node in nodeList():
-        for vm in proxmox.get('nodes/%s/qemu/' % node['node']):
-            if vm['status'] == "stopped":
-                proxmox.delete('nodes/%s/qemu/%s?destroy-unreferenced-disks=1&purge=1' % (node['node'], vm['vmid']))
+#
+# def getNodefromVmid(vmid):
+#     proxmox = proxmoxer_api()
+#     for node in nodeList():
+#         for vm in proxmox.get('nodes/%s/qemu/' % node['node']):
+#             if vm['status'] == "stopped":
+#                 proxmox.delete('nodes/%s/qemu/%s?destroy-unreferenced-disks=1&purge=1' % (node['node'], vm['vmid']))
 
 
 def consoleLink(proxmox, node, vmid):
     configvnc = proxmox.create("nodes", node, "qemu", vmid, 'vncproxy?websocket=1')
     vnclink = (
-                f"https://aniks-proxmox.o0007.ru/?console=kvm&novnc=1&node=%s&resize=scale&vmid=%s&path=api2/json/nodes/%s/qemu/%s/vncwebsocket?port=443&vncticket={configvnc['ticket']}" % (
-            node, vmid, node, vmid))
+            f"https://aniks-proxmox.o0007.ru/?console=kvm&novnc=1&node=%s&resize=scale&vmid=%s&path=api2/json/nodes/%s/qemu/%s/vncwebsocket?port=443&vncticket={configvnc['ticket']}" % (
+        node, vmid, node, vmid))
     return vnclink
 
 
 def storage_item_iso(proxmox):
-    stor_iso = {'': 'Выбрать образ ОС'}
+    stor_iso = {'': 'Выберите ISO для монтирования'}
     list_iso = proxmox.nodes('pve-223').storage.local.content.get()
     for i in list_iso:
         if i['volid'].endswith('.iso'):
@@ -209,21 +210,49 @@ def status_vm(proxmox, node, vmid):
 
 
 def update_local_base():
+    # print("startUpdate")
     all_vm = resources_get(proxmoxer_api(), 'vm')
     for item in all_vm:
+        # print(item)
         bob, created = ResourcesProxmox.objects.update_or_create(vmid=item['vmid'], defaults=item)
 
-    return print("save")
+    return
 
 
-def clone_vm(vmid, description, user):
+def config_vm(node, vmid, item, value):
     proxmox = proxmoxer_api()
+    return proxmox('nodes')(node)('qemu')(vmid)('config').set(item=value)
+
+
+def clone_vm(vmid, description, user, templateVmCPU, templateVmMEM, templateVmHDD, root_pass):
+    proxmox = proxmoxer_api()
+    values_for_update={}
+    values_for_update2={}
+    node = "pve-226"
     newid = nextWMID(proxmox)
     name = "user-" + str(newid) + ".test.local"
     random_node = random.choice(nodeList(proxmox))
-    x = proxmox('nodes')("pve-226")('qemu')(vmid)('clone').create(description=description, name=name, newid=newid,
-                                                                  target=random_node)
+    tmp = proxmox('nodes')(node)('qemu')(vmid)('clone').create(description=description, name=name, newid=newid,
+                                                               target=random_node)
     values_for_update = {"vmid": newid, "account": user}
     vm_instance, created = ResourcesProxmox.objects.update_or_create(vmid=newid, defaults=values_for_update)
+    tmp2 = check_status(proxmox, node, tmp)
+    while tmp2['status'] != 'stopped':
+        tmp2 = check_status(proxmoxer_api(), node, tmp)
+    if tmp2['exitstatus'] == 'OK':
+        proxmox('nodes')(random_node)('qemu')(newid)('config').set(cores=templateVmCPU)
+        proxmox('nodes')(random_node)('qemu')(newid)('config').set(memory=templateVmMEM)
+        proxmox('nodes')(random_node)('qemu')(newid)('config').set(ciuser='root')
+        proxmox('nodes')(random_node)('qemu')(newid)('config').set(cipassword=root_pass)
 
-    return x
+        values_for_update2 = {"vmid": newid, "account": user, "maxcpu": int(templateVmCPU), "cores": int(templateVmCPU),
+                              "maxmem": int(templateVmMEM), "maxdisk": int(templateVmHDD), "memory": int(templateVmMEM),
+                              "name": name, "description": description}
+
+        tmp_vm = ResourcesProxmox.objects.get(vmid=newid)
+        # print(values_for_update2.items())
+        for key, value in values_for_update2.items():
+            setattr(tmp_vm, key, value)
+            # print(tmp_vm, key, value )
+        tmp_vm.save()
+    return

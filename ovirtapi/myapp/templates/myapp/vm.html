@@ -26,7 +26,7 @@
             >Общая информация</a
             >
         </li>
-        <li class="nav-item" role="presentation">
+         <li class="nav-item" role="presentation">
             <a
                     class="nav-link"
                     id="ex1-tab-2"
@@ -35,8 +35,7 @@
                     role="tab"
                     aria-controls="ex1-tabs-2"
                     aria-selected="false"
-            >Мониторинг</a
-            >
+            >Управление ВМ</a>
         </li>
         <li class="nav-item" role="presentation">
             <a
@@ -46,6 +45,18 @@
                     href="#ex1-tabs-3"
                     role="tab"
                     aria-controls="ex1-tabs-3"
+                    aria-selected="false"
+            >Мониторинг</a
+            >
+        </li>
+        <li class="nav-item" role="presentation">
+            <a
+                    class="nav-link"
+                    id="ex1-tab-4"
+                    data-mdb-toggle="tab"
+                    href="#ex1-tabs-4"
+                    role="tab"
+                    aria-controls="ex1-tabs-4"
                     aria-selected="false"
             >Диски</a
             >
@@ -93,7 +104,27 @@
 
 
         </div>
-        <div class="tab-pane fade" id="ex1-tabs-2" role="tabpanel" aria-labelledby="ex1-tab-2">
+
+           <div class="tab-pane fade" id="ex1-tabs-2" role="tabpanel" aria-labelledby="ex1-tab-2">
+
+            <div class="row "> Управление</div>
+
+            <div class="mt-2">
+            <a class="btn btn-info btn-lg" href="{% url 'start_vm' uuid %}">Включить ВМ</a>
+
+                <a class="btn btn-danger btn-lg" href="{% url 'stop_vm' uuid %}">Остановить ВМ</a>
+
+                 <a class="btn btn-danger btn-lg" href="{% url 'console_vm' uuid %}">Открыть консоль</a>
+
+            <a class="btn btn-danger btn-lg" href="{% url 'delete_vm' uuid %}">Удалить ВМ</a>
+
+            </div>
+
+
+        </div>
+
+
+        <div class="tab-pane fade" id="ex1-tabs-3" role="tabpanel" aria-labelledby="ex1-tab-3">
 
             <div class="row "> Данные о нагрузке</div>
             {% for image in images %}
@@ -103,7 +134,7 @@
             {% endfor %}
 
         </div>
-        <div class="tab-pane fade" id="ex1-tabs-3" role="tabpanel" aria-labelledby="ex1-tab-3">
+        <div class="tab-pane fade" id="ex1-tabs-4" role="tabpanel" aria-labelledby="ex1-tab-4">
             Подключенный CDROM - {% if cdrom == "none" %} диск не подключен {% endif %}
             {% if cdrom != "none" %} {{cdrom}} {% endif %}
 

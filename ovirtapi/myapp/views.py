@@ -36,10 +36,11 @@ def logout_User(request):
 @login_required(login_url='login')
 def index(request):  # отрисовка главной страницы
     usersvm = {}
-    get_user_vm  = {}
+    get_user_vm = {}
     get_user_vm = ResourcesProxmox.objects.filter(account=request.user)
+
     context = {'get_all_vm': get_user_vm, }
-    update_local_base()
+
     if (request.POST):
         login_data = request.POST.dict()
         if 'stop' in login_data:
@@ -49,8 +50,7 @@ def index(request):  # отрисовка главной страницы
             y = check_status(proxmoxer_api(), instance.node, x)
             while y['status'] != "stopped":
                 y = check_status(proxmoxer_api(), instance.node, x)
-                print(y['status'])
-                print('----------')
+
             y = check_status(proxmoxer_api(), instance.node, x)
             update_local_base()
             user_vm = ResourcesProxmox.objects.filter(account=request.user)
@@ -83,8 +83,7 @@ def index(request):  # отрисовка главной страницы
 
             return response
             # class ="btn btn-info" onclick="window.open(this.href, 'mywin', 'left=20,top=20,width=700,height=500,toolbar=0,resizable=1'); return false;" > console < / a > -->
-
-
+    update_local_base()
     return render(request, 'myapp/index.html', context)
 
 
@@ -167,7 +166,7 @@ def get_vm(request, uuid):
 
     formISO = List_ISO()
 
-    context = {'vm': vm, "images": img_list, 'cdrom': cdrom, 'formISO': formISO}
+    context = {'vm': vm, "images": img_list, 'cdrom': cdrom, 'formISO': formISO, 'uuid': uuid}
 
     return render(request, 'myapp/vm.html', context)
 
@@ -193,13 +192,34 @@ def delete_vm(request, uuid):
 
 
 @login_required(login_url='login')
-def stop_vm(request):
-    print(request)
-    return
+def stop_vm(request, uuid):
+    vm = get_object_or_404(ResourcesProxmox, uuid=uuid)
+    vmStop(proxmoxer_api(), vm.node, vm.vmid)
+    return redirect('index')
+
+
+@login_required(login_url='login')
+def start_vm(request, uuid):
+    vm = get_object_or_404(ResourcesProxmox, uuid=uuid)
+    vmStart(proxmoxer_api(), vm.node, vm.vmid)
+    return redirect('index')
+
+
+@login_required(login_url='login')
+def console_vm(request, uuid):
+    instance = ResourcesProxmox.objects.get(uuid=uuid)
+    vnclink = consoleLink(proxmoxer_api(), instance.node, instance.vmid)
+    response = redirect(vnclink)
+    ticket_cons = access_ticket()
+    cookie_auth = urllib.parse.quote_plus(ticket_cons['ticket'])
+    expiry_time = 60 * 60  # in seconds
+    response.set_cookie("PVEAuthCookie", value=cookie_auth, expires=expiry_time, domain='.o0007.ru')
+    return response
 
 @login_required(login_url='login')
 def get_template_vm(request):
-    template_vm_list ={"debian9":9000,"debian10":9001,"ubuntu18":9002,"ubuntu20":9003,"ubuntu16":9004,"":9005}
+    template_vm_list = {"debian9": 9000, "debian10": 9001, "ubuntu18": 9002, "ubuntu20": 9003, "ubuntu16": 9004,
+                        "centos7": 9005}
     form = Template_form()
     if request.method == 'POST':
         templateVmOs = request.POST.get('templateVmOs')
@@ -208,9 +228,11 @@ def get_template_vm(request):
         templateVmHDD = request.POST.get('templateVmHDD')
         vm_description = request.POST.get('vm_description')
         root_pass = request.POST.get('root_pass')
-        clone_vm(template_vm_list[templateVmOs], vm_description, request.user )
+        clone_vm(template_vm_list[templateVmOs], vm_description, request.user, templateVmCPU, templateVmMem,
+                 templateVmHDD, root_pass)
+        # print(templateVmOs, templateVmCPU, templateVmMem, templateVmHDD)
+
         return redirect('index')
 
-        # print (templateVmOs, templateVmCPU, templateVmMem , templateVmHDD)
-    context = {'form': form}
+    context = {'form': form, }
     return render(request, 'myapp/vm_template.html', context)
